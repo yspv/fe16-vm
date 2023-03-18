@@ -19,42 +19,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
-
-#define MEMORY_SIZE 1 << 16
-
-
-typedef enum {
-    f0 = 0,       /* 00 */
-    f1,           /* 01 */
-    f2,           /* 02 */
-    f3,           /* 03 */
-    f4,           /* 04 */
-    f5,           /* 05 */
-    fcd,          /* 06 */
-    fip,          /* 07 */
-    reg_count,
-} Fe16_reg;
-
-typedef enum {
-    mov,         /* 0x0 */
-    add,         /* 0x1 */
-    sub,         /* 0x2 */
-    jmp,         /* 0x3 */
-    push,        /* 0x4 */
-    pop,         /* 0x5 */
-    xor,         /* 0x6 */
-    and,         /* 0x7 */
-    op_count
-} Fe16_opcode;
-
-typedef enum {
-    zf,           /* zefo flag */
-    nf,           /* negative flag */
-    of,           /* overflow flag  */
-} Fe16_flag;  
+#include "fe16vm.h"
 
 uint16_t fe16_memory[MEMORY_SIZE];
 uint16_t fe16_regs[reg_count];
+
 
 static uint16_t fe16_get_mode(uint16_t op, uint16_t inst)
 {
