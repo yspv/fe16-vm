@@ -6,7 +6,9 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "fe16vm.h"
+
 #define INST_LEN 80
 
 static char *fe16_opcodes[op_count] = {
@@ -17,7 +19,8 @@ static char *fe16_opcodes[op_count] = {
 
 static char *fe16_regs[reg_count] = {
     "f0", "f1", "f2", 
-    "f3", "f4", "f5"
+    "f3", "f4", "f5",
+    "fcd", "fip",
 };
 
 
@@ -52,7 +55,6 @@ static uint16_t fe16asm_generate_imm(char *strln)
                 imm = atoi(&(strln[i]));
                 return imm + (1 << 8);
             }
-
         }
     }
     return 1 << 9;
@@ -64,6 +66,7 @@ static uint16_t fe16asm_generate_reg(char *strln)
     for(int i = 0; i < reg_count; i++) {
         src = strstr(strln, fe16_regs[i]);
         if(src != NULL)
+            src += 2;
             break;
     }
     for(int l = 0; src && (l < reg_count); l++) {
@@ -74,20 +77,50 @@ static uint16_t fe16asm_generate_reg(char *strln)
     return op_count + 1;
 }
 
-static void fe16asm_compile(char *strln)
+static void fe16asm_compile(char *strln, uint16_t *data)
 {
-       
+    uint16_t op, dreg, src;
+    op = fe16asm_generate_opcode(strln);
+    if(op == (op_count + 1)) {
+        fprintf(stderr, "Error: Wrong opcode\n\n\t%s\n", strln);
+        exit(3);
+    }
+    dreg = fe16asm_generate_dreg(strln);
+    if(dreg == (reg_count + 1)) {
+        fprintf(stderr, "Error: " \
+                "Wrong destination operand\n\n\t%s\n", strln);
+        exit(3);
+    }
+    src = fe16asm_generate_imm(strln);
+    if(src == (1 << 9)) {
+        src = fe16asm_generate_reg(strln);
+        if(src == (reg_count + 1)) {
+            fprintf(stderr, "Error: " \
+                    "Wrong source operand\n\n\t%s\n", strln);
+            exit(3);
+        }
+    }
+
+    *data  = op | dreg | src;
 }
+
 
 int main(int argc, char **argv)
 {
     int fd;
+    FILE *fp;
+    uint16_t data;
     char *map = NULL;
-    uint16_t op, reg, src;
     struct stat st;
-    if(argc < 2) {
-        fprintf(stderr, "usage: fe16asm [filename]\n");
+    if(argc < 3) {
+        fprintf(stderr, "usage: fe16asm [filename] [output_filename]\n");
         exit(1);
+    }
+
+    fp = fopen(argv[2], "wb");
+    if(fp == NULL) {
+        perror(argv[2]);
+        exit(2);
     }
     fd = open(argv[1], O_RDWR, 0600);
     if(fd == -1) {
@@ -132,16 +165,16 @@ int main(int argc, char **argv)
             } 
             else if(!flag){
                 tmp[i] = '\0';
-                op = fe16asm_get_opcode(tmp);
-                reg = fe16asm_get_dreg(tmp);
-                src = fe16asm_get_reg(tmp);
-                printf("%d %d %d\n", op, reg, src);
+                fe16asm_compile(tmp, &data);
                 l += 1;
                 break;
             }
         } /* end of for */
+        fwrite(&data, sizeof(uint16_t), 1, fp);
         free(tmp);
-    } /* end of loop */
+    } /* end of while */
 
+    close(fd);
+    fclose(fp);
     return 0;
 }

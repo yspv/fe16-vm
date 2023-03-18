@@ -11,14 +11,10 @@
  *  PPPP - Opcode bits.
  *
  *------------------------------------------------------------------------
- * 
- *
- *
- *    
+ *     
  *    
  *   
  */
-#include "fe16vm.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -178,22 +174,30 @@ void print_regs()
     }
 }
 
-uint16_t program[] = {
-    0b0000000110001000,
-    0b0000001101100110,
-    0b0001000000010000,
-    0b0110001000010000,
-    0b0000001100011000,
-    0b0111000000010000,
-};
-
 int main(int argc, char **argv)
 {
+    FILE *fp;
+    uint16_t size, data;
+
+    if(argc < 2) {
+        fprintf(stderr, "usage: fe16vm [file]\n");
+        exit(1);
+    }
+    fp = fopen(argv[1], "rb");
+    if(fp == NULL) {
+        perror(argv[1]);
+        exit(1);
+    }
+
+    fseek(fp, 0L, SEEK_END);
+    size = ftell(fp) / 2;
+    fseek(fp, 0L, SEEK_SET);
 
     print_regs();
     puts("--------");
-    for(int i = 0; i < sizeof(program)/4; i++) {
-        fe16_inst_execute(program[i]);
+    for(int i = 0; i < size; i++) {
+        fread(&data, sizeof(uint16_t), 1, fp);
+        fe16_inst_execute(data);
     }
     puts("--------");
     print_regs();
