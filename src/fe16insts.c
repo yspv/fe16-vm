@@ -35,7 +35,10 @@ void fe16_inst_push(uint16_t src)
 
 void fe16_inst_pop(uint16_t src)
 {
-
+    uint16_t addr = fe16_reg_read(fsp);
+    uint16_t val = fe16_mem_read(addr);
+    fe16_reg_write(src, val);
+    fe16_reg_write(fsp, addr - 1);   
 }
 
 void fe16_inst_and(Fe16_reg reg, uint16_t src)

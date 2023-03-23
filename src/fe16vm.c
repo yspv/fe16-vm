@@ -82,7 +82,7 @@ void fe16_execute(uint16_t inst)
         if(mode) {
             fe16_inst_add(dreg, src);
         } else {
-            fe16_inst_mov(dreg, fe16_reg_read(src>>4));
+            fe16_inst_add(dreg, fe16_reg_read(src>>4));
         }
         break;
     case sub:
@@ -107,9 +107,7 @@ void fe16_execute(uint16_t inst)
         }
         break;
     case pop:
-        if(mode) {
-            fe16_inst_pop(src);
-        } else {
+        if(!mode) {
             fe16_inst_pop(fe16_reg_read(src>>4));
         }
         break;
