@@ -1,15 +1,15 @@
 /*
- * ____________***________
- * | PPPP DDDM NNNN NNNN |
- * -----------------------
- *             NNNN NNNN - Store a value. 
- *
- *           M - MODE bit. If mode bit 1 other N bits store a number else
- *                           first 3 N bits store register address.
- *
- *        DDD - Destention bits. Store a destention register address.
- *
- *  PPPP - Opcode bits.
+ * 15____________***______0
+ * | PPPP DDD M NNNN NNNN |
+ * --||||-|||-|-||||-||||-
+ *   |||| ||| | NNNN NNNN - Store a value. 
+ *   |||| ||| | 
+ *   |||| ||| M - MODE bit. If mode bit 1 other N bits store a number else
+ *   |||| |||                 (*) 3 N bits store register.
+ *   |||| |||
+ *   |||| DDD - Destination bits. Store a destention register address.
+ *   ||||
+ *   PPPP - Opcode bits.
  *
  */
 #include "fe16vm.h"
@@ -94,9 +94,9 @@ void fe16_execute(uint16_t inst)
         break;
     case jmp:
         if(mode) {
-            fe16_inst_sub(dreg, src);
+            fe16_inst_jump(src);
         } else {
-            fe16_inst_sub(dreg, fe16_reg_read(src>>4));
+            fe16_inst_jump(fe16_reg_read(src>>4));
         }
         break;
     case push:
@@ -107,6 +107,7 @@ void fe16_execute(uint16_t inst)
         }
         break;
     case pop:
+        assert(mode == 0);
         if(!mode) {
             fe16_inst_pop(fe16_reg_read(src>>4));
         }
@@ -155,37 +156,6 @@ static void print_regs()
     }
 }
 
-uint16_t program[] = {
-    0b0100000101101000,
-    0b0100000101100101,
-    0b0100000101101100,
-    0b0100000101101100,
-    0b0100000101101111,
-    0b0000000100000001,
-    0b0000001100000101,
-    0b0000100100000010,
-    0b1000000000000000,
-    0b0110000000000000,
-    0b0000100100000001,
-    0b1000000000000000,
-};
-
-uint16_t program1[] = {
-    0b0100000101101000,
-    0b0100000101100101,
-    0b0100000101101100,
-    0b0100000101101100,
-    0b0100000101101111,
-    0b0100000100000000,
-    0b0000000100000001,
-    0b0000001100000110,
-    0b0000100100000010,
-    0b1000000000000000,
-    0b0000000100000000,
-    0b0000100100000001,
-    0b1000000000000000,
-};
-
 int main(int argc, char **argv)
 {
     FILE *fp;
@@ -201,20 +171,25 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    fe16_reg_write(fsp, 0x2000);
-    fe16_reg_write(fpc, 0x3000);
-
     fseek(fp, 0L, SEEK_END);
     size = ftell(fp);             
     fseek(fp, 0L, SEEK_SET);
     
-    fread(fe16_mem_get_addr(0x3000), size, 1, fp);
+    if(!size) {
+        fprintf(stderr, "Error: Executed file is empty\n");
+        exit(1);
+    }
+
+    fe16_reg_write(fsp, SP_BEGIN);
+    fe16_reg_write(fpc, PC_START);
+    
+    fread(fe16_mem_get_addr(PC_START), size, 1, fp);
 
     while(1) {
         uint16_t addr = fe16_reg_read(fpc);
         uint16_t inst = fe16_mem_read(addr);
-        fe16_execute(inst);
         fe16_reg_write(fpc, addr + 1);
+        fe16_execute(inst);
     }
 
     return 0;

@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "fe16opcodes.h"
 
+#define SP_BEGIN 0x2000
+#define PC_START 0x3000
+
 void fe16_execute(uint16_t inst);
 
 static Fe16_opcode fe16_get_opcode(uint16_t inst);

@@ -82,7 +82,7 @@ void fe16_inst_sys(void)
         fe16_sys_write(fe16_reg_read(f0), fe16_reg_read(f1));
         break;
     case sys_read:
-        fe16_sys_write(fe16_reg_read(f0), fe16_reg_read(f1));
+        fe16_sys_read(fe16_reg_read(f0), fe16_reg_read(f1));
         break;
     }
 }
