@@ -12,7 +12,9 @@ typedef enum {
     and,         /*  0x7  logical and            */
     sys,         /*  0x8  syscall                */
     cmp,         /*  0x9  compares two operands  */
-    jme,         /*  0x10 jump if equal          */
+    jme,         /*  0xA  jump if equal          */
+    call,        /*  0xB  call function          */
+    ret,         /*  0xC  return from function   */
     op_count
 } Fe16_opcode;
 

@@ -69,7 +69,6 @@ void fe16_execute(uint16_t inst)
     uint16_t dreg = fe16_get_dreg(op, inst);
     uint16_t mode = fe16_get_mode(op, inst);
     uint16_t src = fe16_get_src(inst);
-    
     switch(op) {
     case mov:
         if(mode) {
@@ -109,7 +108,7 @@ void fe16_execute(uint16_t inst)
     case pop:
         assert(mode == 0);
         if(!mode) {
-            fe16_inst_pop(fe16_reg_read(src>>4));
+            fe16_inst_pop(src>>4);
         }
         break;
     case xor:
@@ -142,6 +141,16 @@ void fe16_execute(uint16_t inst)
         } else {
             fe16_inst_jme(fe16_reg_read(src>>4));
         }
+        break;
+    case call:
+        if(mode) {
+            fe16_inst_call(src);
+        } else {
+            fe16_inst_call(fe16_reg_read(src>>4));
+        }
+        break;
+    case ret:
+        fe16_inst_ret();
         break;
     default:
         exit(10);
@@ -184,7 +193,7 @@ int main(int argc, char **argv)
     fe16_reg_write(fpc, PC_START);
     
     fread(fe16_mem_get_addr(PC_START), size, 1, fp);
-
+    
     while(1) {
         uint16_t addr = fe16_reg_read(fpc);
         uint16_t inst = fe16_mem_read(addr);

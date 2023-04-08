@@ -4,7 +4,8 @@
 #include "fe16flags.h"
 #include "fe16syscalls.h"
 #include "fe16memory.h"
-
+#include <assert.h>
+#include <stdio.h>
 
 void fe16_inst_mov(Fe16_reg reg, uint16_t src)
 {
@@ -28,17 +29,17 @@ void fe16_inst_jump(uint16_t src)
 
 void fe16_inst_push(uint16_t src)
 {
-    uint16_t addr = fe16_reg_read(fsp);
+    uint16_t addr = fe16_reg_read(fsp) + 1;
     fe16_mem_write(addr, src);
-    fe16_reg_write(fsp, addr+1);
+    fe16_reg_write(fsp, addr);
 }
 
-void fe16_inst_pop(uint16_t src)
-{
+void fe16_inst_pop(Fe16_reg reg)
+{   
     uint16_t addr = fe16_reg_read(fsp);
-    uint16_t val = fe16_mem_read(addr);
-    fe16_reg_write(src, val);
-    fe16_reg_write(fsp, addr - 1);   
+    uint16_t val  = fe16_mem_read(addr);
+    fe16_reg_write(reg, val);
+    fe16_reg_write(fsp, (addr - 1));  
 }
 
 void fe16_inst_and(Fe16_reg reg, uint16_t src)
@@ -85,4 +86,17 @@ void fe16_inst_sys(void)
         fe16_sys_read(fe16_reg_read(f0), fe16_reg_read(f1));
         break;
     }
+}
+
+void fe16_inst_call(uint16_t src)
+{
+    fe16_inst_push(fe16_reg_read(fpc));
+    fe16_inst_jump(src);
+}
+
+void fe16_inst_ret(void)
+{
+    uint16_t addr = fe16_reg_read(fsp);
+    uint16_t ret = fe16_mem_read(addr);
+    fe16_reg_write(fpc, ret);
 }

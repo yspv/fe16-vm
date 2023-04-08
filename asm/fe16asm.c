@@ -4,8 +4,8 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include "src/fe16opcodes.h"
-#include "src/fe16regs.h"
+#include "../src/fe16opcodes.h"
+#include "../src/fe16regs.h"
 #include <limits.h>
 
 #define ERR_COLOR "\033[0;36m"
@@ -13,7 +13,8 @@
 char *fe16_opcode_arr[op_count] = {
     "mov",  "add", "sub", "jmp",
     "push", "pop", "xor", "and",
-    "sys",  "cmp", "jme"
+    "sys",  "cmp", "jme", "call",
+    "ret",
 };
 
 char *fe16_reg_arr[reg_count] = {
@@ -359,7 +360,10 @@ gen_inst:
 
         inst = op + dreg + src;
         fwrite(&inst, sizeof(uint16_t), 1, fp);
-
+#ifdef DEBUG
+        printf("%s\n", line);
+        printf("%ld %ld %ld\n", op, dreg, src);
+#endif
         fe16asm_free_inst_arr(arr);
         free(arr);
 next_line:

@@ -17,6 +17,8 @@ fe16-vm is simple 16bit virtual machine based on RISC architecture.
 | cmp     | Compares two operands |
 | jme     | Jump to line if equal |
 | sys     | System call           |
+| call    | Call procedure        |
+| ret     | Return from procedure |
 
 
 ## Registers
